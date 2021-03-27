@@ -1,3 +1,5 @@
+import uvicorn
+
 from fastapi import FastAPI
 
 from .database import database
@@ -15,3 +17,6 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
+
+
+# uvicorn.run("cultr.app:app")
