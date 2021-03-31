@@ -39,7 +39,7 @@ class CookieAuth(SecurityBase):
             raise error_403
 
         select_query = sessions.select().where(sessions.c.token == token)
-        session = await database.execute(select_query)
+        session = await database.fetch_one(select_query)
 
         if session is None:
             raise error_403

@@ -15,3 +15,16 @@ sessions = sqlalchemy.Table(
     sqlalchemy.Column("username", sqlalchemy.String, sqlalchemy.ForeignKey("users.username")),
     sqlalchemy.Column("token", sqlalchemy.String)
 )
+
+urls = sqlalchemy.Table(
+    "urls",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, unique=True, autoincrement=True, primary_key=True),
+    sqlalchemy.Column("owner_username", sqlalchemy.String, sqlalchemy.ForeignKey("users.username")),
+    sqlalchemy.Column("name", sqlalchemy.String, unique=True),
+    sqlalchemy.Column("source", sqlalchemy.String),
+    sqlalchemy.Column("destination", sqlalchemy.String),
+    sqlalchemy.Column("uses", sqlalchemy.Integer, default=0),
+    sqlalchemy.Column("max_uses", sqlalchemy.Integer, nullable=True),
+    sqlalchemy.Column("expiration_datetime", sqlalchemy.DateTime, nullable=True)
+)
