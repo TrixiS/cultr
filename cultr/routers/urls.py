@@ -3,12 +3,14 @@ import datetime as dt
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Depends
+
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from sqlalchemy import or_
 
-from .auth import cookie_auth, Session
+# from .auth import cookie_auth, Session
+from .oauth2 import User, current_user
 
 from ..database import database
 from ..database.models import urls
@@ -43,9 +45,9 @@ def items_per_page(items: Optional[int] = 25):
 
 
 @api_router.post("/urls", response_model=Url)
-async def url_post(
+async def urls_post(
     *,
-    session: Session = Depends(cookie_auth),
+    user: User = Depends(current_user),
     url: UrlIn,
 ):
     now = dt.datetime.now()
@@ -62,7 +64,7 @@ async def url_post(
     url_insert_query = urls.insert().values(
         **url.dict(),
         uses=0,
-        owner_username=session.username
+        owner_username=user.username
     )
 
     inserted_url_id = await database.execute(url_insert_query)
@@ -70,21 +72,21 @@ async def url_post(
     return Url(
         **url.dict(),
         id=inserted_url_id,
-        owner_username=session.username
+        owner_username=user.username
     )
 
 
 @api_router.get("/urls", response_model=List[Url])
 async def urls_get_all(
     *,
-    session: Session = Depends(cookie_auth),
+    user: User = Depends(current_user),
     page: Optional[int] = 1,
     items: Optional[int] = Depends(items_per_page)
 ):
     if page <= 0:
         page = 1
 
-    count_urls_query = urls.count().where(urls.c.owner_username == session.username)
+    count_urls_query = urls.count().where(urls.c.owner_username == user.username)
     urls_count = await database.fetch_val(count_urls_query)
     pages_for_count = math.ceil(urls_count / items)
 
@@ -93,7 +95,7 @@ async def urls_get_all(
 
     urls_select_query = (
         urls.select()
-        .where(urls.c.owner_username == session.username)
+        .where(urls.c.owner_username == user.username)
         .offset((page - 1) * items)
         .limit(items)
     )
@@ -104,12 +106,12 @@ async def urls_get_all(
 @api_router.get("/urls/{url_name}", response_model=Url)
 async def urls_get_single(
     *,
-    session: Session = Depends(cookie_auth),
+    user: User = Depends(current_user),
     url_name: str
 ):
     url_select_query = (
         urls.select()
-        .where(urls.c.owner_username == session.username)
+        .where(urls.c.owner_username == user.username)
         .where(urls.c.name == url_name)
     )
 
@@ -124,12 +126,12 @@ async def urls_get_single(
 @api_router.delete("/urls/{url_name}")
 async def urls_delete(
     *,
-    session: Session = Depends(cookie_auth),
+    user: User = Depends(current_user),
     url_name: str
 ):
     url_delete_query = (
         urls.delete()
-        .where(urls.c.owner_username == session.username)
+        .where(urls.c.owner_username == user.username)
         .where(urls.c.name == url_name)
     )
 
@@ -140,13 +142,13 @@ async def urls_delete(
 @api_router.put("/urls/{url_name}")
 async def urls_put(
     *,
-    session: Session = Depends(cookie_auth),
+    user: User = Depends(current_user),
     url_name: str,
     url: UrlIn
 ):
     url_update_query = (
         urls.update()
-        .where(urls.c.owner_username == session.username)
+        .where(urls.c.owner_username == user.username)
         .where(urls.c.name == url_name)
         .values(**url.dict())
     )
