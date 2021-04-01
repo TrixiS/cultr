@@ -1,7 +1,7 @@
 import math
 import datetime as dt
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Depends
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel, Field
@@ -11,7 +11,7 @@ from sqlalchemy import or_
 from .auth import cookie_auth, Session
 
 from ..database import database
-from ..database.models import users, urls
+from ..database.models import urls
 
 URL_NAME_REGEX = r"([a-zA-Z0-9_]+)"
 URL_DEST_REGEX = r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+"
@@ -23,7 +23,7 @@ redirect_router = APIRouter()
 class UrlIn(BaseModel):
     name: str = Field(regex=URL_NAME_REGEX, max_length=50)
     destination: str = Field(regex=URL_DEST_REGEX)
-    max_uses: Optional[int] = Field(gt=0)
+    max_uses: Optional[int] = Field(None, gt=0)
     expiration_datetime: Optional[dt.datetime] = None
 
 
@@ -177,5 +177,3 @@ async def url_redirect_get(url_name: str, request: Request):
 
     await database.execute(url_update_query)
     return RedirectResponse(db_url.destination)
-
-# TODO: test expire datetime
