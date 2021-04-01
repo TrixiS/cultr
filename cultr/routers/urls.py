@@ -21,9 +21,9 @@ redirect_router = APIRouter()
 
 
 class UrlIn(BaseModel):
-    name: str = Field(None, regex=URL_NAME_REGEX, max_length=50)
-    destination: str = Field(None, regex=URL_DEST_REGEX)
-    max_uses: Optional[int] = Field(None, gt=0)
+    name: str = Field(regex=URL_NAME_REGEX, max_length=50)
+    destination: str = Field(regex=URL_DEST_REGEX)
+    max_uses: Optional[int] = Field(gt=0)
     expiration_datetime: Optional[dt.datetime] = None
 
 
@@ -121,6 +121,40 @@ async def urls_get_single(
     return url
 
 
+@api_router.delete("/urls/{url_name}")
+async def urls_delete(
+    *,
+    session: Session = Depends(cookie_auth),
+    url_name: str
+):
+    url_delete_query = (
+        urls.delete()
+        .where(urls.c.owner_username == session.username)
+        .where(urls.c.name == url_name)
+    )
+
+    deleted_rows = await database.execute(url_delete_query)
+    return {"deleted": bool(deleted_rows)}
+
+
+@api_router.put("/urls/{url_name}")
+async def urls_put(
+    *,
+    session: Session = Depends(cookie_auth),
+    url_name: str,
+    url: UrlIn
+):
+    url_update_query = (
+        urls.update()
+        .where(urls.c.owner_username == session.username)
+        .where(urls.c.name == url_name)
+        .values(**url.dict())
+    )
+
+    updated_rows = await database.execute(url_update_query)
+    return {"updated": bool(updated_rows)}
+
+
 @redirect_router.get("/u/{url_name}")
 async def url_redirect_get(url_name: str, request: Request):
     now = dt.datetime.now()
@@ -143,3 +177,5 @@ async def url_redirect_get(url_name: str, request: Request):
 
     await database.execute(url_update_query)
     return RedirectResponse(db_url.destination)
+
+# TODO: test expire datetime
