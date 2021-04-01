@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from sqlalchemy import or_
 
-# from .auth import cookie_auth, Session
 from .oauth2 import User, current_user
 
 from ..database import database
