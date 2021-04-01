@@ -110,8 +110,3 @@ async def register(form_data: OAuth2PasswordRequestForm = Depends()):
 
     await database.execute(insert_user_query)
     return {"detail": "Success"}
-
-
-@router.get("/secret")
-async def get_secret(user: User = Depends(current_user)):
-    return {"secret": os.environ["JWT_SECRET"]}
