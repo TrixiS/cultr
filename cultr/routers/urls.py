@@ -49,9 +49,11 @@ async def urls_post(
     user: User = Depends(current_user),
     url: UrlIn,
 ):
-    now = dt.datetime.now()
+    if url.expiration_datetime is not None:
+        now = dt.datetime.utcnow()
+        expiration_datetime = dt.datetime.utcfromtimestamp(url.expiration_datetime.timestamp())
 
-    if url.expiration_datetime is not None and url.expiration_datetime <= now:
+    if now >= expiration_datetime:
         raise HTTPException(422, "Expiration datetime should be future")
 
     url_select_query = urls.select().where(urls.c.name == url.name)
@@ -150,7 +152,7 @@ async def urls_put(
 
 @redirect_router.get("/u/{url_name}")
 async def url_redirect_get(url_name: str, request: Request):
-    now = dt.datetime.now()
+    now = dt.datetime.utcnow()
 
     url_select_query = (
         urls.select()
