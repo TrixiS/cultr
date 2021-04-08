@@ -85,13 +85,6 @@ async def urls_get_all(
     if page <= 0:
         page = 1
 
-    count_urls_query = urls.count().where(urls.c.owner_username == user.username)
-    urls_count = await database.fetch_val(count_urls_query)
-    pages_for_count = math.ceil(urls_count / items)
-
-    if page > pages_for_count:
-        page = pages_for_count
-
     urls_select_query = (
         urls.select()
         .where(urls.c.owner_username == user.username)
@@ -100,7 +93,6 @@ async def urls_get_all(
     )
 
     return await database.fetch_all(urls_select_query)
-
 
 @api_router.get("/urls/{url_name}", response_model=Url)
 async def urls_get_single(
@@ -147,9 +139,9 @@ async def urls_put(
 ):
     url_update_query = (
         urls.update()
+        .values(**url.dict())
         .where(urls.c.owner_username == user.username)
         .where(urls.c.name == url_name)
-        .values(**url.dict())
     )
 
     updated_rows = await database.execute(url_update_query)
