@@ -1,4 +1,3 @@
-import math
 import datetime as dt
 
 from fastapi import APIRouter, HTTPException, Request
