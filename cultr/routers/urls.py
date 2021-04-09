@@ -52,8 +52,8 @@ async def urls_post(
         now = dt.datetime.utcnow()
         expiration_datetime = dt.datetime.utcfromtimestamp(url.expiration_datetime.timestamp())
 
-    if now >= expiration_datetime:
-        raise HTTPException(422, "Expiration datetime should be future")
+        if now >= expiration_datetime:
+            raise HTTPException(422, "Expiration datetime should be future")
 
     url_select_query = urls.select().where(urls.c.name == url.name)
     db_url = await database.fetch_one(url_select_query)
