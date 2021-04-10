@@ -1,4 +1,4 @@
-# cultr
+# [cultr](https://trixis.xyz)
 Простой укоротитель ссылок
 
 [Пример приложения клиента](https://github.com/TrixiS/cultr_frontend)
