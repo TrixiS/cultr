@@ -156,7 +156,7 @@ async def url_redirect_get(url_name: str, request: Request):
     url_select_query = (
         urls.select()
         .where(urls.c.name == url_name)
-        .where(or_(urls.c.uses.is_(None), urls.c.uses < urls.c.max_uses))
+        .where(or_(urls.c.max_uses.is_(None), urls.c.uses < urls.c.max_uses))
         .where(or_(urls.c.expiration_datetime.is_(None), urls.c.expiration_datetime > now))
     )
 

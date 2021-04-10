@@ -25,6 +25,6 @@ urls = sqlalchemy.Table(
     sqlalchemy.Column("name", sqlalchemy.String, unique=True),
     sqlalchemy.Column("destination", sqlalchemy.String),
     sqlalchemy.Column("uses", sqlalchemy.Integer, default=0),
-    sqlalchemy.Column("max_uses", sqlalchemy.Integer, nullable=True),
+    sqlalchemy.Column("max_uses", sqlalchemy.Integer, nullable=True, default=None),
     sqlalchemy.Column("expiration_datetime", sqlalchemy.DateTime, nullable=True)
 )
