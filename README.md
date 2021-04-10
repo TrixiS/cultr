@@ -14,3 +14,6 @@ TOKEN_EXPIRE_MINUTES=30
 APP_ORIGIN="http://localhost:3000"
 ```
 4. Запустите сервер `uvicorn cultr.app:app`
+
+# Развернутое приложение
+[Работающий клиент + сервер](https://trixis.xyz)
