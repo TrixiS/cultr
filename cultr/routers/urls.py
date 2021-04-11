@@ -37,7 +37,8 @@ def items_per_page(items: Optional[int] = 25):
     VALID_VALUES = (10, 25, 50, 100)
 
     if items not in VALID_VALUES:
-        raise HTTPException(422, f"Items per page value should be in {VALID_VALUES}")
+        raise HTTPException(
+            422, f"Items per page value should be in {VALID_VALUES}")
 
     return items
 
@@ -50,7 +51,8 @@ async def urls_post(
 ):
     if url.expiration_datetime is not None:
         now = dt.datetime.utcnow()
-        expiration_datetime = dt.datetime.utcfromtimestamp(url.expiration_datetime.timestamp())
+        expiration_datetime = dt.datetime.utcfromtimestamp(
+            url.expiration_datetime.timestamp())
 
         if now >= expiration_datetime:
             raise HTTPException(422, "Expiration datetime should be future")
@@ -94,6 +96,7 @@ async def urls_get_all(
     )
 
     return await database.fetch_all(urls_select_query)
+
 
 @api_router.get("/urls/{url_name}", response_model=Url)
 async def urls_get_single(

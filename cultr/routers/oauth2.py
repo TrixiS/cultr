@@ -51,7 +51,8 @@ async def current_user(token: str = Depends(oauth2_scheme)) -> User:
     except jwt.JWTError:
         raise error_401
 
-    expires_datetime = dt.datetime.fromisoformat(decoded_user_dict["expires_at"])
+    expires_datetime = dt.datetime.fromisoformat(
+        decoded_user_dict["expires_at"])
 
     if expires_datetime <= dt.datetime.utcnow():
         raise error_401
@@ -70,7 +71,8 @@ def create_access_token(user_data, expires_timedelta=None):
     if expires_timedelta is not None:
         expires_at = dt.datetime.utcnow() + expires_timedelta
     else:
-        expires_at = dt.datetime.utcnow() + dt.timedelta(minutes=int(os.environ["TOKEN_EXPIRE_MINUTES"]))
+        expires_at = dt.datetime.utcnow(
+        ) + dt.timedelta(minutes=int(os.environ["TOKEN_EXPIRE_MINUTES"]))
 
     to_encode["expires_at"] = expires_at
 

@@ -15,5 +15,7 @@ database = Database(DATABASE_URL)
 #       install postgres
 #       delete mysql
 #       move database_url into env
-engine = sqlalchemy.create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+#       use just config.py isstead .env
+engine = sqlalchemy.create_engine(DATABASE_URL, connect_args={
+                                  "check_same_thread": False})
 models.metadata.create_all(engine)
