@@ -7,7 +7,6 @@ from .. import config
 
 # TODO: make pytest tests
 # TODO: nginx.conf
-# TODO: __main__ with unicorn and config creation?
 
 database = Database(config.DATABASE_URL)
 
