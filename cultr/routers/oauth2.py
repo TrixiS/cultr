@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.encoders import jsonable_encoder
 
-from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 
 from .. import config
+from ..models.token import Token
+from ..models.users import User, UserIn
 from ..database import database
 from ..database.models import users
 
@@ -16,22 +17,6 @@ PASSWORD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
-
-
-class User(BaseModel):
-    id: int
-    username: str
-    hashed_password: str
-
-
-class UserIn(BaseModel):
-    username: str
-    password: str
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 
 async def fetch_user(username):

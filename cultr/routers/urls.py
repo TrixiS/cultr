@@ -4,33 +4,17 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.params import Depends
 
 from starlette.responses import RedirectResponse
-from pydantic import BaseModel, Field
 from typing import Optional, List
 from sqlalchemy import or_
 
-from .oauth2 import User, current_user
-
+from .oauth2 import current_user
+from ..models.users import User
+from ..models.urls import Url, UrlIn
 from ..database import database
 from ..database.models import urls
 
-URL_NAME_REGEX = r"([a-zA-Z0-9_]+)"
-URL_DEST_REGEX = r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+"
-
 api_router = APIRouter()
 redirect_router = APIRouter()
-
-
-class UrlIn(BaseModel):
-    name: str = Field(regex=URL_NAME_REGEX, max_length=50)
-    destination: str = Field(regex=URL_DEST_REGEX)
-    max_uses: Optional[int] = Field(None, gt=0)
-    expiration_datetime: Optional[dt.datetime] = None
-
-
-class Url(UrlIn):
-    id: int
-    owner_username: str
-    uses: int = 0
 
 
 def items_per_page(items: Optional[int] = 25):
