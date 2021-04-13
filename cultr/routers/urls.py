@@ -1,6 +1,6 @@
 import datetime as dt
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response, Query
 from fastapi.params import Depends
 
 from starlette.responses import RedirectResponse
@@ -43,7 +43,12 @@ def items_per_page(items: Optional[int] = 25):
     return items
 
 
-def is_valid_url(url: UrlIn, request: Request) -> UrlIn:
+async def is_valid_url(
+    *,
+    url: UrlIn,
+    url_name: Optional[str] = None,
+    request: Request
+) -> UrlIn:
     if url.expiration_datetime is not None:
         now = dt.datetime.utcnow()
         expiration_datetime = dt.datetime.utcfromtimestamp(
@@ -56,6 +61,13 @@ def is_valid_url(url: UrlIn, request: Request) -> UrlIn:
         raise HTTPException(
             422, f"Link destination can not refer to {url.destination}")
 
+    if url_name is None or url_name != url.name:
+        url_select_query = urls.select().where(urls.c.name == url.name)
+        db_url = await database.fetch_one(url_select_query)
+
+        if db_url is not None:
+            raise HTTPException(409, "Url with the same name already exists")
+
     return url
 
 
@@ -65,12 +77,6 @@ async def urls_post(
     user: User = Depends(current_user),
     url: UrlIn = Depends(is_valid_url),
 ):
-    url_select_query = urls.select().where(urls.c.name == url.name)
-    db_url = await database.fetch_one(url_select_query)
-
-    if db_url is not None:
-        raise HTTPException(409, "Url with the same name already exists")
-
     url_insert_query = urls.insert().values(
         **url.dict(),
         uses=0,
