@@ -1,4 +1,3 @@
-import os
 import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -9,6 +8,7 @@ from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 
+from .. import config
 from ..database import database
 from ..database.models import users
 
@@ -45,8 +45,8 @@ async def current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
         decoded_user_dict = jwt.decode(
             token,
-            os.environ["JWT_SECRET"],
-            algorithms=[os.environ["JWT_ALGO"]]
+            config.JWT_SECRET,
+            algorithms=[config.JWT_ALGO]
         )
     except jwt.JWTError:
         raise error_401
@@ -72,14 +72,14 @@ def create_access_token(user_data, expires_timedelta=None):
         expires_at = dt.datetime.utcnow() + expires_timedelta
     else:
         expires_at = dt.datetime.utcnow(
-        ) + dt.timedelta(minutes=int(os.environ["TOKEN_EXPIRE_MINUTES"]))
+        ) + dt.timedelta(minutes=config.JWT_EXPIRE_MINUTES)
 
     to_encode["expires_at"] = expires_at
 
     return jwt.encode(
         jsonable_encoder(to_encode),
-        os.environ["JWT_SECRET"],
-        algorithm=os.environ["JWT_ALGO"]
+        config.JWT_SECRET,
+        algorithm=config.JWT_ALGO
     )
 
 
