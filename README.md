@@ -6,7 +6,7 @@
 # Установка и запуск
 1. Установите Python 3.8+ на вашу машину
 2. Установите зависимости `pip install -r requirements.txt`
-3. Создайте файл cultr/config.py и заполните его по примеру из файла cultr/config_example.py
+3. Создайте файл `cultr/config.py` и заполните его по примеру из файла `cultr/config_example.py`
 ```Python
 from typing import Any, Dict, List
 
