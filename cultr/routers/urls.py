@@ -1,6 +1,6 @@
 import datetime as dt
 
-from fastapi import APIRouter, HTTPException, Request, Response, Query
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.params import Depends
 
 from starlette.responses import RedirectResponse
@@ -57,7 +57,7 @@ async def is_valid_url(
         if now >= expiration_datetime:
             raise HTTPException(422, "Expiration datetime should be future")
 
-    if str(request.base_url) in url.destination:
+    if request.base_url.netloc in url.destination:
         raise HTTPException(
             422, f"Link destination can not refer to {url.destination}")
 

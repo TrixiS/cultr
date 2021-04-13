@@ -5,6 +5,8 @@ from databases import Database
 from . import models
 
 # TODO!!!: add CORS
+# TODO: remove .env and use just config
+#       <- in separate branch
 
 # TODO: check with postgres
 DATABASE_URL = "sqlite:///database.db"
