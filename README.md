@@ -6,15 +6,24 @@
 # Установка и запуск
 1. Установите Python 3.8+ на вашу машину
 2. Установите зависимости `pip install -r requirements.txt`
-3. Создайте .env файл в корневой директории и заполните его своими данными
-```
-JWT_SECRET="случайная строка"
-JWT_ALGO="HS256"
-TOKEN_EXPIRE_MINUTES=30
-APP_ORIGIN="http://localhost:3000"
+3. Создайте файл cultr/config.py и заполните его по примеру из файла cultr/config_example.py
+```Python
+from typing import Any, Dict, List
+
+JWT_SECRET: str = "ваш секрет"
+JWT_ALGO: str = "HS256"
+JWT_EXPIRE_MINUTES: int = 30
+
+CORS_ORIGINS: List[str] = [
+    "http://localhost:8000"
+]
+
+DATABASE_URL: str = "sqlite:///database.db"
+DATABASE_CONNECT_ARGS: Dict[Any, Any] = {"check_same_thread": False}
 ```
 4. Запустите сервер `uvicorn cultr.app:app`
 
 # Развернутое приложение
 [Работающий клиент + сервер](https://trixis.xyz)
+
 Логин и пароль тестового аккаунта: user, user
