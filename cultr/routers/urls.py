@@ -1,6 +1,6 @@
 import datetime as dt
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.params import Depends
 
 from starlette.responses import RedirectResponse
@@ -43,12 +43,7 @@ def items_per_page(items: Optional[int] = 25):
     return items
 
 
-@api_router.post("/urls", response_model=Url)
-async def urls_post(
-    *,
-    user: User = Depends(current_user),
-    url: UrlIn,
-):
+def is_valid_url(url: UrlIn, request: Request) -> UrlIn:
     if url.expiration_datetime is not None:
         now = dt.datetime.utcnow()
         expiration_datetime = dt.datetime.utcfromtimestamp(
@@ -57,6 +52,19 @@ async def urls_post(
         if now >= expiration_datetime:
             raise HTTPException(422, "Expiration datetime should be future")
 
+    if str(request.base_url) in url.destination:
+        raise HTTPException(
+            422, f"Link destination can not refer to {url.destination}")
+
+    return url
+
+
+@api_router.post("/urls", response_model=Url)
+async def urls_post(
+    *,
+    user: User = Depends(current_user),
+    url: UrlIn = Depends(is_valid_url),
+):
     url_select_query = urls.select().where(urls.c.name == url.name)
     db_url = await database.fetch_one(url_select_query)
 
@@ -118,7 +126,7 @@ async def urls_get_single(
     return url
 
 
-@api_router.delete("/urls/{url_name}")
+@api_router.delete("/urls/{url_name}", status_code=204)
 async def urls_delete(
     *,
     user: User = Depends(current_user),
@@ -131,15 +139,19 @@ async def urls_delete(
     )
 
     deleted_rows = await database.execute(url_delete_query)
-    return {"deleted": bool(deleted_rows)}
+
+    if deleted_rows < 1:
+        raise HTTPException(404, "No data found")
+
+    return Response(status_code=204)
 
 
-@api_router.put("/urls/{url_name}")
+@api_router.put("/urls/{url_name}", status_code=204)
 async def urls_put(
     *,
     user: User = Depends(current_user),
     url_name: str,
-    url: UrlIn
+    url: UrlIn = Depends(is_valid_url)
 ):
     url_update_query = (
         urls.update()
@@ -149,7 +161,11 @@ async def urls_put(
     )
 
     updated_rows = await database.execute(url_update_query)
-    return {"updated": bool(updated_rows)}
+
+    if updated_rows < 1:
+        raise HTTPException(404, "No data found")
+
+    return Response(status_code=204)
 
 
 @redirect_router.get("/u/{url_name}")

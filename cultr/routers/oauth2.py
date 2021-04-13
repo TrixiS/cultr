@@ -1,7 +1,7 @@
 import os
 import datetime as dt
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.encoders import jsonable_encoder
 
@@ -83,7 +83,7 @@ def create_access_token(user_data, expires_timedelta=None):
     )
 
 
-@router.post("/token", response_model=Token)
+@router.post("/token", response_model=Token, status_code=201)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     db_user = await fetch_user(form_data.username)
     error_400 = HTTPException(400, "Incorrect username or password")
@@ -111,4 +111,4 @@ async def register(form_data: OAuth2PasswordRequestForm = Depends()):
     )
 
     await database.execute(insert_user_query)
-    return {"detail": "Success"}
+    return Response(status_code=201)
