@@ -3,21 +3,17 @@ import sqlalchemy
 from databases import Database
 
 from . import models
+from .. import config
 
-# TODO!!!: add CORS
-# TODO: remove .env and use just config
-#       <- in separate branch
+# TODO: make pytest tests
+# TODO: nginx.conf
+# TODO: __main__ with unicorn and config creation?
 
-# TODO: check with postgres
-DATABASE_URL = "sqlite:///database.db"
+database = Database(config.DATABASE_URL)
 
-database = Database(DATABASE_URL)
+engine = sqlalchemy.create_engine(
+    config.DATABASE_URL,
+    connect_args=config.DATABASE_CONNECT_ARGS
+)
 
-# TODO: remove check same thread
-#       install postgres
-#       delete mysql
-#       move database_url into env
-#       use just config.py isstead .env
-engine = sqlalchemy.create_engine(DATABASE_URL, connect_args={
-                                  "check_same_thread": False})
 models.metadata.create_all(engine)

@@ -59,7 +59,7 @@ async def is_valid_url(
 
     if request.base_url.netloc in url.destination:
         raise HTTPException(
-            422, f"Link destination can not refer to {url.destination}")
+            422, f"Destination cant refer to {url.destination}")
 
     if url_name is None or url_name != url.name:
         url_select_query = urls.select().where(urls.c.name == url.name)
