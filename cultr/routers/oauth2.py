@@ -10,18 +10,13 @@ from jose import jwt
 from .. import config
 from ..models.token import Token
 from ..models.users import User, UserIn
-from ..database import database
-from ..database.models import users
+from ..database import models as db_models, async_session
+from ..utils.db import fetch_user
 
 PASSWORD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
-
-
-async def fetch_user(username):
-    user_select_query = users.select().where(users.c.username == username)
-    return await database.fetch_one(user_select_query)
 
 
 async def current_user(token: str = Depends(oauth2_scheme)) -> User:
@@ -42,12 +37,12 @@ async def current_user(token: str = Depends(oauth2_scheme)) -> User:
     if expires_datetime <= dt.datetime.utcnow():
         raise error_401
 
-    db_user = await fetch_user(decoded_user_dict["username"])
+    db_user = await fetch_user(decoded_user_dict["sub"])
 
     if db_user is None:
         raise error_401
 
-    return db_user
+    return User.from_db_model(db_user)
 
 
 def create_access_token(user_data, expires_timedelta=None):
@@ -79,21 +74,24 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not PASSWORD_CONTEXT.verify(form_data.password, db_user.hashed_password):
         raise error_400
 
-    token = create_access_token({"username": db_user.username})
+    token = create_access_token({"sub": db_user.username})
     return {"access_token": token, "token_type": "bearer"}
 
 
 @router.post("/users", status_code=201)
 async def register(form_data: OAuth2PasswordRequestForm = Depends()):
-    db_user = await fetch_user(form_data.username)
+    async with async_session() as session:
+        db_user = await fetch_user(form_data.username, session)
 
-    if db_user is not None:
-        raise HTTPException(409, "User already exists")
+        if db_user is not None:
+            raise HTTPException(409, "User already exists")
 
-    insert_user_query = users.insert().values(
-        username=form_data.username,
-        hashed_password=PASSWORD_CONTEXT.hash(form_data.password)
-    )
+        user = db_models.User(
+            username=form_data.username,
+            hashed_password=PASSWORD_CONTEXT.hash(form_data.password)
+        )
 
-    await database.execute(insert_user_query)
+        session.add(user)
+        await session.commit()
+
     return Response(status_code=201)

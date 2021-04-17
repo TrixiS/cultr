@@ -1,6 +1,5 @@
-import sqlalchemy
-
-from databases import Database
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 
 from . import models
 from .. import config
@@ -8,11 +7,11 @@ from .. import config
 # TODO: make pytest tests
 # TODO: nginx.conf
 
-database = Database(config.DATABASE_URL)
+engine = create_async_engine(config.DATABASE_URI, echo=True)
+async_session = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession)
 
-engine = sqlalchemy.create_engine(
-    config.DATABASE_URL,
-    connect_args=config.DATABASE_CONNECT_ARGS
-)
 
-models.metadata.create_all(engine)
+async def init_database():
+    async with engine.begin() as conn:
+        await conn.run_sync(models.Base.metadata.create_all)

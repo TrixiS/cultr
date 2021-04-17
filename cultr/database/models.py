@@ -1,35 +1,31 @@
 import sqlalchemy
 
-metadata = sqlalchemy.MetaData()
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.schema import Column
+from sqlalchemy.orm import relationship
 
-users = sqlalchemy.Table(
-    "users",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, autoincrement=True),
-    sqlalchemy.Column("username", sqlalchemy.String, unique=True),
-    sqlalchemy.Column("hashed_password", sqlalchemy.String)
-)
 
-sessions = sqlalchemy.Table(
-    "sessions",
-    metadata,
-    sqlalchemy.Column("username", sqlalchemy.String,
-                      sqlalchemy.ForeignKey("users.username")),
-    sqlalchemy.Column("token", sqlalchemy.String)
-)
+Base = declarative_base()
 
-urls = sqlalchemy.Table(
-    "urls",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, unique=True,
-                      autoincrement=True, primary_key=True),
-    sqlalchemy.Column("owner_username", sqlalchemy.String,
-                      sqlalchemy.ForeignKey("users.username")),
-    sqlalchemy.Column("name", sqlalchemy.String, unique=True),
-    sqlalchemy.Column("destination", sqlalchemy.String),
-    sqlalchemy.Column("uses", sqlalchemy.Integer, default=0),
-    sqlalchemy.Column("max_uses", sqlalchemy.Integer,
-                      nullable=True, default=None),
-    sqlalchemy.Column("expiration_datetime",
-                      sqlalchemy.DateTime, nullable=True)
-)
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    username = Column(sqlalchemy.String, unique=True)
+    hashed_password = Column(sqlalchemy.String)
+
+
+class Url(Base):
+    __tablename__ = "urls"
+
+    id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
+    name = Column(sqlalchemy.String, unique=True)
+    destination = Column(sqlalchemy.String)
+    uses = Column(sqlalchemy.Integer, default=0)
+    max_uses = Column(sqlalchemy.Integer, nullable=True, default=None)
+    expiration_datetime = Column(
+        sqlalchemy.DateTime, nullable=True, default=None)
+
+    owner = relationship("User", foreign_keys=[owner_id])
