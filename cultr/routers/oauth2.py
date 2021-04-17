@@ -71,7 +71,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if db_user is None:
         raise error_400
 
-    if not PASSWORD_CONTEXT.verify(form_data.password, db_user.hashed_password):
+    if not PASSWORD_CONTEXT.verify(
+            form_data.password, db_user.hashed_password):
         raise error_400
 
     token = create_access_token({"sub": db_user.username})
