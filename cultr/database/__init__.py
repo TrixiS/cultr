@@ -4,8 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from . import models
 from .. import config
 
-# TODO: make pytest tests
 # TODO: nginx.conf
+# TODO: readme for frontend repo
 
 engine = create_async_engine(config.DATABASE_URI, echo=True)
 async_session = sessionmaker(

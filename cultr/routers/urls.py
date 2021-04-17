@@ -168,11 +168,13 @@ async def url_redirect_get(url_name: str, request: Request):
     now = dt.datetime.utcnow()
 
     url_select_query = (
-        select(db_models.Url).where(db_models.Url.name == url_name)
+        select(db_models.Url)
+        .where(db_models.Url.name == url_name)
         .where(
             or_(
                 db_models.Url.max_uses.is_(None),
-                db_models.Url.uses < db_models.Url.max_uses)
+                db_models.Url.uses < db_models.Url.max_uses
+            )
         )
         .where(
             or_(
