@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import config
-from .database import database
-from .routers import urls, oauth2
+from .database import init_database
+from .routers import oauth2, urls
 
 app = FastAPI()
 app.include_router(oauth2.router, prefix="/api", tags=["oauth"])
@@ -21,9 +21,8 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    await database.connect()
+    await init_database()
 
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
+# @app.on_event("shutdown")
+# async def shutdown():
+#     await database.disconnect()

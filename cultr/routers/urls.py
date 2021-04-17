@@ -5,13 +5,13 @@ from fastapi.params import Depends
 
 from starlette.responses import RedirectResponse
 from typing import Optional, List
-from sqlalchemy import or_
+from sqlalchemy import select, update, delete, or_
 
 from .oauth2 import current_user
 from ..models.users import User
 from ..models.urls import Url, UrlIn
-from ..database import database
-from ..database.models import urls
+from ..database import models as db_models, async_session
+from ..utils.db import fetch_user
 
 api_router = APIRouter()
 redirect_router = APIRouter()
@@ -46,8 +46,10 @@ async def is_valid_url(
             422, f"Destination cant refer to {url.destination}")
 
     if url_name is None or url_name != url.name:
-        url_select_query = urls.select().where(urls.c.name == url.name)
-        db_url = await database.fetch_one(url_select_query)
+        async with async_session() as session:
+            query = select(db_models.Url).where(db_models.Url.name == url.name)
+            result = await session.execute(query)
+            db_url = result.scalar()
 
         if db_url is not None:
             raise HTTPException(409, "Url with the same name already exists")
@@ -61,18 +63,16 @@ async def urls_post(
     user: User = Depends(current_user),
     url: UrlIn = Depends(is_valid_url),
 ):
-    url_insert_query = urls.insert().values(
-        **url.dict(),
-        uses=0,
-        owner_username=user.username
-    )
-
-    inserted_url_id = await database.execute(url_insert_query)
+    async with async_session() as session:
+        owner = await fetch_user(user.username)
+        db_url = db_models.Url(**url.dict(), uses=0, owner_id=owner.id)
+        session.add(db_url)
+        await session.commit()
 
     return Url(
         **url.dict(),
-        id=inserted_url_id,
-        owner_username=user.username
+        id=db_url.id,
+        owner_id=owner.id
     )
 
 
@@ -87,13 +87,15 @@ async def urls_get_all(
         page = 1
 
     urls_select_query = (
-        urls.select()
-        .where(urls.c.owner_username == user.username)
+        select(db_models.Url)
+        .filter_by(owner_id=user.id)
         .offset((page - 1) * items)
         .limit(items)
     )
 
-    return await database.fetch_all(urls_select_query)
+    async with async_session() as session:
+        result = await session.execute(urls_select_query)
+        return [Url.from_db_model(r) for r in result.scalars().all()]
 
 
 @api_router.get("/urls/{url_name}", response_model=Url)
@@ -103,17 +105,18 @@ async def urls_get_single(
     url_name: str
 ):
     url_select_query = (
-        urls.select()
-        .where(urls.c.owner_username == user.username)
-        .where(urls.c.name == url_name)
+        select(db_models.Url)
+        .filter_by(owner_id=user.id, name=url_name)
     )
 
-    url = await database.fetch_one(url_select_query)
+    async with async_session() as session:
+        result = await session.execute(url_select_query)
+        url = result.scalar()
 
     if url is None:
         raise HTTPException(404)
 
-    return url
+    return Url.from_db_model(url)
 
 
 @api_router.delete("/urls/{url_name}", status_code=204)
@@ -123,14 +126,15 @@ async def urls_delete(
     url_name: str
 ):
     url_delete_query = (
-        urls.delete()
-        .where(urls.c.owner_username == user.username)
-        .where(urls.c.name == url_name)
+        delete(db_models.Url)
+        .filter_by(owner_id=user.id, name=url_name)
     )
 
-    deleted_rows = await database.execute(url_delete_query)
+    async with async_session() as session:
+        result = await session.execute(url_delete_query)
+        await session.commit()
 
-    if deleted_rows < 1:
+    if result.rowcount < 1:
         raise HTTPException(404, "No data found")
 
     return Response(status_code=204)
@@ -144,15 +148,16 @@ async def urls_put(
     url: UrlIn = Depends(is_valid_url)
 ):
     url_update_query = (
-        urls.update()
+        update(db_models.Url)
+        .filter_by(owner_id=user.id, name=url_name)
         .values(**url.dict())
-        .where(urls.c.owner_username == user.username)
-        .where(urls.c.name == url_name)
     )
 
-    updated_rows = await database.execute(url_update_query)
+    async with async_session() as session:
+        result = await session.execute(url_update_query)
+        await session.commit()
 
-    if updated_rows < 1:
+    if result.rowcount < 1:
         raise HTTPException(404, "No data found")
 
     return Response(status_code=204)
@@ -163,20 +168,26 @@ async def url_redirect_get(url_name: str, request: Request):
     now = dt.datetime.utcnow()
 
     url_select_query = (
-        urls.select()
-        .where(urls.c.name == url_name)
-        .where(or_(urls.c.max_uses.is_(None), urls.c.uses < urls.c.max_uses))
-        .where(or_(urls.c.expiration_datetime.is_(None), urls.c.expiration_datetime > now))
+        select(db_models.Url)
+        .where(db_models.Url.name == url_name)
+        .where(or_(db_models.Url.max_uses.is_(None), db_models.Url.uses < db_models.Url.max_uses))
+        .where(or_(db_models.Url.expiration_datetime.is_(None), db_models.Url.expiration_datetime > now))
     )
 
-    db_url = await database.fetch_one(url_select_query)
+    async with async_session() as session:
+        select_result = await session.execute(url_select_query)
+        db_url = select_result.scalar()
 
-    if db_url is None:
-        return RedirectResponse(request.base_url)
+        if db_url is None:
+            return RedirectResponse(request.base_url)
 
-    url_update_query = urls.update().where(urls.c.name == url_name).values(
-        uses=db_url.uses + 1
-    )
+        url_update_query = (
+            update(db_models.Url)
+            .filter_by(name=url_name)
+            .values(uses=db_url.uses + 1)
+        )
 
-    await database.execute(url_update_query)
+        await session.execute(url_update_query)
+        await session.commit()
+
     return RedirectResponse(db_url.destination)
