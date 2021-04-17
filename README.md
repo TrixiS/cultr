@@ -10,7 +10,7 @@
 ```Python
 from typing import Any, Dict, List
 
-JWT_SECRET: str = "ваш секрет"
+JWT_SECRET: str = "случайная строка"
 JWT_ALGO: str = "HS256"
 JWT_EXPIRE_MINUTES: int = 30
 
@@ -18,7 +18,7 @@ CORS_ORIGINS: List[str] = [
     "http://localhost:8000"
 ]
 
-DATABASE_URL: str = "sqlite:///database.db"
+DATABASE_URI: str = "sqlite+aiosqlite:///database.db"
 DATABASE_CONNECT_ARGS: Dict[Any, Any] = {"check_same_thread": False}
 ```
 4. Запустите сервер `uvicorn cultr.app:app`
