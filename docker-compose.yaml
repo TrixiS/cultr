@@ -1,0 +1,25 @@
+version: "3"
+
+volumes:
+  backend_volume:
+  nginx_volume:
+
+services:
+  nginx:
+    build: ./nginx/
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - nginx_volume
+
+  cultr-backend:
+    build: ./
+    restart: always
+    environment:
+      - CORS_ORIGINS=["http://localhost:8000", "http://localhost:3000", "http://localhost:5000"]
+      - DATABASE_URI=sqlite+aiosqlite:///database.db
+    ports:
+      - 5000:5000
+    volumes:
+      - backend_volume:/resources

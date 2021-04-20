@@ -1,0 +1,10 @@
+.git
+venv
+*.db
+*.log
+*.md
+*.pyc
+*.*cache
+*.mp4
+*.pptx
+nginx
