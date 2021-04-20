@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
 
 URL_NAME_REGEX = r"([a-zA-Z0-9_]+)"
-URL_DEST_REGEX = r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+"
 
 
 class UrlIn(BaseModel):

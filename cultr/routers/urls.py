@@ -41,9 +41,9 @@ async def is_valid_url(
         if now >= expiration_datetime:
             raise HTTPException(422, "Expiration datetime should be future")
 
-    if request.base_url.netloc in url.destination:
+    if request.base_url.netloc in url.destination.host:
         raise HTTPException(
-            422, f"Destination cant refer to {url.destination}")
+            422, f"Destination cant refer to {url.destination.host}")
 
     if url_name is None or url_name != url.name:
         async with async_session() as session:
