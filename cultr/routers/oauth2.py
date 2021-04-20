@@ -43,7 +43,7 @@ async def current_user(token: str = Depends(oauth2_scheme)) -> User:
     if db_user is None:
         raise error_401
 
-    return User.from_db_model(db_user)
+    return User.from_orm(db_user)
 
 
 def create_access_token(user_data, expires_timedelta=None):
