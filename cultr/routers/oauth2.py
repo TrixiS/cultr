@@ -7,13 +7,14 @@ from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 from jose import jwt
 
-from .. import config
+from ..config import settings
 from ..models.token import Token
 from ..models.users import User, UserIn
 from ..database import models as db_models, async_session
 from ..utils.db import fetch_user
 
 PASSWORD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ALGO = "HS256"
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
@@ -25,8 +26,8 @@ async def current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
         decoded_user_dict = jwt.decode(
             token,
-            config.JWT_SECRET,
-            algorithms=[config.JWT_ALGO]
+            settings.SECRET_KEY,
+            algorithms=[ALGO]
         )
     except jwt.JWTError:
         raise error_401
@@ -42,7 +43,7 @@ async def current_user(token: str = Depends(oauth2_scheme)) -> User:
     if db_user is None:
         raise error_401
 
-    return User.from_db_model(db_user)
+    return User.from_orm(db_user)
 
 
 def create_access_token(user_data, expires_timedelta=None):
@@ -52,14 +53,14 @@ def create_access_token(user_data, expires_timedelta=None):
         expires_at = dt.datetime.utcnow() + expires_timedelta
     else:
         expires_at = dt.datetime.utcnow(
-        ) + dt.timedelta(minutes=config.JWT_EXPIRE_MINUTES)
+        ) + dt.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode["expires_at"] = expires_at
 
     return jwt.encode(
         jsonable_encoder(to_encode),
-        config.JWT_SECRET,
-        algorithm=config.JWT_ALGO
+        settings.SECRET_KEY,
+        algorithm=ALGO
     )
 
 

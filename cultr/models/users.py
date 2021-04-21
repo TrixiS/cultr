@@ -1,12 +1,13 @@
 from pydantic import BaseModel
 
-from .base import DBBaseModel
 
-
-class User(DBBaseModel):
+class User(BaseModel):
     id: int
     username: str
     hashed_password: str
+
+    class Config:
+        orm_mode = True
 
 
 class UserIn(BaseModel):

@@ -41,9 +41,9 @@ async def is_valid_url(
         if now >= expiration_datetime:
             raise HTTPException(422, "Expiration datetime should be future")
 
-    if request.base_url.netloc in url.destination:
+    if request.base_url.netloc in url.destination.host:
         raise HTTPException(
-            422, f"Destination cant refer to {url.destination}")
+            422, f"Destination cant refer to {url.destination.host}")
 
     if url_name is None or url_name != url.name:
         async with async_session() as session:
@@ -95,7 +95,7 @@ async def urls_get_all(
 
     async with async_session() as session:
         result = await session.execute(urls_select_query)
-        return [Url.from_db_model(r) for r in result.scalars().all()]
+        return [Url.from_orm(r) for r in result.scalars().all()]
 
 
 @api_router.get("/urls/{url_name}", response_model=Url)
@@ -116,7 +116,7 @@ async def urls_get_single(
     if url is None:
         raise HTTPException(404)
 
-    return Url.from_db_model(url)
+    return Url.from_orm(url)
 
 
 @api_router.delete("/urls/{url_name}", status_code=204)

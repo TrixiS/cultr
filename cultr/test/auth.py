@@ -5,6 +5,13 @@ from . import client
 
 
 def get_auth_headers(username, password):
+    r = client.post("/api/users", data={
+        "username": username,
+        "password": password
+    })
+
+    assert r.status_code in (201, 409)
+
     r = client.post(
         "/api/token",
         data={"username": username, "password": password}
