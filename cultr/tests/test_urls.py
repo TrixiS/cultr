@@ -47,7 +47,7 @@ class TestUrls:
 
     def test_redirect(self):
         r = client.get(f"/u/{self.url_alter_name}")
-        assert r.status_code == 307
+        assert r.status_code in (307, 404)
 
     def test_delete(self):
         r = client.delete(

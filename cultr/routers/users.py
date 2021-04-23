@@ -8,7 +8,7 @@ from ..utils.security import PASSWORD_CONTEXT
 router = APIRouter()
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 async def register(form_data: OAuth2PasswordRequestForm = Depends()):
     async with async_session() as session:
         db_user = await fetch_user(form_data.username, session)

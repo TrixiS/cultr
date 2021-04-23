@@ -56,7 +56,7 @@ async def is_valid_url(
     return url
 
 
-@api_router.post("/", response_model=api_models.Url)
+@api_router.post("", response_model=api_models.Url)
 async def urls_post(
     *,
     user: api_models.User = Depends(current_user),
@@ -75,7 +75,7 @@ async def urls_post(
     )
 
 
-@api_router.get("/", response_model=List[api_models.Url])
+@api_router.get("", response_model=List[api_models.Url])
 async def urls_get_all(
     *,
     user: api_models.User = Depends(current_user),
