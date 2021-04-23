@@ -7,11 +7,10 @@ from starlette.responses import RedirectResponse
 from typing import Optional, List
 from sqlalchemy import select, update, delete, or_
 
-from .oauth2 import current_user
-from ..models.users import User
-from ..models.urls import Url, UrlIn
+from .. import api_models
 from ..database import models as db_models, async_session
 from ..utils.db import fetch_user
+from ..utils.security import current_user
 
 api_router = APIRouter()
 redirect_router = APIRouter()
@@ -29,10 +28,10 @@ def items_per_page(items: Optional[int] = 25):
 
 async def is_valid_url(
     *,
-    url: UrlIn,
+    url: api_models.UrlIn,
     url_name: Optional[str] = None,
     request: Request
-) -> UrlIn:
+) -> api_models.UrlIn:
     if url.expiration_datetime is not None:
         now = dt.datetime.utcnow()
         expiration_datetime = dt.datetime.utcfromtimestamp(
@@ -57,11 +56,11 @@ async def is_valid_url(
     return url
 
 
-@api_router.post("/urls", response_model=Url)
+@api_router.post("/", response_model=api_models.Url)
 async def urls_post(
     *,
-    user: User = Depends(current_user),
-    url: UrlIn = Depends(is_valid_url),
+    user: api_models.User = Depends(current_user),
+    url: api_models.UrlIn = Depends(is_valid_url),
 ):
     async with async_session() as session:
         owner = await fetch_user(user.username)
@@ -69,17 +68,17 @@ async def urls_post(
         session.add(db_url)
         await session.commit()
 
-    return Url(
+    return api_models.Url(
         **url.dict(),
         id=db_url.id,
         owner_id=owner.id
     )
 
 
-@api_router.get("/urls", response_model=List[Url])
+@api_router.get("/", response_model=List[api_models.Url])
 async def urls_get_all(
     *,
-    user: User = Depends(current_user),
+    user: api_models.User = Depends(current_user),
     page: Optional[int] = 1,
     items: Optional[int] = Depends(items_per_page)
 ):
@@ -95,13 +94,13 @@ async def urls_get_all(
 
     async with async_session() as session:
         result = await session.execute(urls_select_query)
-        return [Url.from_orm(r) for r in result.scalars().all()]
+        return [api_models.Url.from_orm(r) for r in result.scalars().all()]
 
 
-@api_router.get("/urls/{url_name}", response_model=Url)
+@api_router.get("/{url_name}", response_model=api_models.Url)
 async def urls_get_single(
     *,
-    user: User = Depends(current_user),
+    user: api_models.User = Depends(current_user),
     url_name: str
 ):
     url_select_query = (
@@ -116,13 +115,13 @@ async def urls_get_single(
     if url is None:
         raise HTTPException(404)
 
-    return Url.from_orm(url)
+    return api_models.Url.from_orm(url)
 
 
-@api_router.delete("/urls/{url_name}", status_code=204)
+@api_router.delete("/{url_name}", status_code=204)
 async def urls_delete(
     *,
-    user: User = Depends(current_user),
+    user: api_models.User = Depends(current_user),
     url_name: str
 ):
     url_delete_query = (
@@ -140,12 +139,12 @@ async def urls_delete(
     return Response(status_code=204)
 
 
-@api_router.put("/urls/{url_name}", status_code=204)
+@api_router.put("/{url_name}", status_code=204)
 async def urls_put(
     *,
-    user: User = Depends(current_user),
+    user: api_models.User = Depends(current_user),
     url_name: str,
-    url: UrlIn = Depends(is_valid_url)
+    url: api_models.UrlIn = Depends(is_valid_url)
 ):
     url_update_query = (
         update(db_models.Url)
@@ -163,7 +162,7 @@ async def urls_put(
     return Response(status_code=204)
 
 
-@redirect_router.get("/u/{url_name}")
+@redirect_router.get("/u/{url_name}", status_code=307)
 async def url_redirect_get(url_name: str, request: Request):
     now = dt.datetime.utcnow()
 

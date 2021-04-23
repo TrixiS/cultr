@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+# TODO: add email
+
 
 class User(BaseModel):
     id: int
@@ -10,6 +12,7 @@ class User(BaseModel):
         orm_mode = True
 
 
+# TODO: make username and email optional
 class UserIn(BaseModel):
     username: str
     password: str

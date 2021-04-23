@@ -7,12 +7,16 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+# TODO: add email and email_confirmed fields
+
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     username = Column(sqlalchemy.String, unique=True)
+    email = Column(sqlalchemy.String, unique=True)
+    email_confirmed = Column(sqlalchemy.Boolean, default=False)
     hashed_password = Column(sqlalchemy.String)
 
 
