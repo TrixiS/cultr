@@ -1,18 +1,18 @@
-from pydantic import BaseModel
-
-# TODO: add email
+from pydantic import BaseModel, EmailStr
 
 
-class User(BaseModel):
-    id: int
+class UserBase(BaseModel):
+    email: EmailStr
     username: str
+
+
+class User(UserBase):
+    id: int
     hashed_password: str
 
     class Config:
         orm_mode = True
 
 
-# TODO: make username and email optional
-class UserIn(BaseModel):
-    username: str
+class UserIn(UserBase):
     password: str

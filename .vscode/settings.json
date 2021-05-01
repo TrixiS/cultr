@@ -1,7 +1,9 @@
 {
-    "python.linting.pycodestyleEnabled": true,
+    "python.linting.pycodestyleEnabled": false,
     "python.linting.enabled": true,
     "python.formatting.autopep8Args": ["--max-line-length", "79", "--experimental"],
     "editor.formatOnSave": true,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.pythonPath": "d:\\python\\cultr\\venv\\Scripts\\python.exe",
+    "python.linting.pylintEnabled": true
 }

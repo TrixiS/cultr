@@ -1,9 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
+from starlette.responses import RedirectResponse
+
 from .. import api_models
+# TODO: maybe rename models module to db_models
+from ..database import get_session, models as db_models
+from ..utils import security
 from ..utils.db import fetch_user
-from ..utils.security import PASSWORD_CONTEXT, create_access_token
 
 router = APIRouter()
 
@@ -16,9 +22,36 @@ async def token(form_data: OAuth2PasswordRequestForm = Depends()):
     if db_user is None:
         raise error_400
 
-    if not PASSWORD_CONTEXT.verify(
+    if not security.PASSWORD_CONTEXT.verify(
             form_data.password, db_user.hashed_password):
         raise error_400
 
-    token = create_access_token({"sub": db_user.username})
+    token = security.create_access_token({"sub": db_user.username})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/confirm/{confirm_jwt}", status_code=307)
+async def confirm(
+    *,
+    session: AsyncSession = Depends(get_session),
+    request: Request,
+    confirm_jwt: str
+):
+    error_404 = HTTPException(404)
+    decoded_data = security.decode_jwt(confirm_jwt)
+
+    if decoded_data is None:
+        raise error_404
+
+    select_query = select(db_models.User).filter_by(email=decoded_data["sub"])
+    result = await session.execute(select_query)
+    db_user = result.scalar()
+
+    if db_user is None:
+        raise error_404
+
+    db_user.email_confirmed = True
+    session.add(db_user)
+    await session.commit()
+
+    return RedirectResponse(request.base_url)

@@ -1,7 +1,7 @@
 import secrets
 
 from typing import List
-from pydantic import BaseSettings, AnyHttpUrl
+from pydantic import BaseSettings, AnyHttpUrl, EmailStr
 
 
 class Settings(BaseSettings):
@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 1
     CORS_ORIGINS: List[AnyHttpUrl] = []
     DATABASE_URI: str
+
+    EMAIL_USER: EmailStr
+    EMAIL_PASS: str
+    EMAIL_HOST: str
+    EMAIL_PORT: int
 
     class Config:
         case_sensitive = True
