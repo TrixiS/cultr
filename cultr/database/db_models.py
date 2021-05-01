@@ -4,10 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
-
-# TODO: add email and email_confirmed fields
 
 
 class User(Base):

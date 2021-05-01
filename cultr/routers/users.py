@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 
 from .. import api_models
-from ..database import models as db_models, get_session
+from ..database import db_models, get_session
 from ..utils.security import PASSWORD_CONTEXT, create_jwt_from_data
 from ..utils.email import send_email_confirmation
 

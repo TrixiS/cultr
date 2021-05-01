@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import api_models
 from ..config import settings
-from ..database import get_session, models as db_models
+from ..database import get_session
+from ..utils.db import fetch_user
 
 PASSWORD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGO = "HS256"
@@ -63,11 +64,7 @@ async def current_user(
     if expires_datetime <= dt.datetime.utcnow():
         raise error_401
 
-    select_query = select(
-        db_models.User).filter_by(
-        username=decoded_user_dict["sub"])
-    result = await session.execute(select_query)
-    db_user = result.scalar()
+    db_user = await fetch_user(decoded_user_dict["sub"], session)
 
     if db_user is None:
         raise error_401

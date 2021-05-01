@@ -2,7 +2,7 @@ from typing import Generator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from . import models
+from . import db_models
 from ..config import settings
 
 
@@ -13,7 +13,7 @@ async_session = sessionmaker(
 
 async def init_database():
     async with engine.begin() as conn:
-        await conn.run_sync(models.Base.metadata.create_all)
+        await conn.run_sync(db_models.Base.metadata.create_all)
 
 
 async def get_session() -> Generator:

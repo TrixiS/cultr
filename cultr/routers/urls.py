@@ -8,7 +8,7 @@ from typing import Optional, List
 from sqlalchemy import select, update, delete, or_
 
 from .. import api_models
-from ..database import models as db_models, async_session
+from ..database import db_models, async_session
 from ..utils.db import fetch_user
 from ..utils.security import current_user
 

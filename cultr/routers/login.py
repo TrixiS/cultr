@@ -6,8 +6,7 @@ from sqlalchemy import select, update
 from starlette.responses import RedirectResponse
 
 from .. import api_models
-# TODO: maybe rename models module to db_models
-from ..database import get_session, models as db_models
+from ..database import get_session, db_models
 from ..utils import security
 from ..utils.db import fetch_user
 
