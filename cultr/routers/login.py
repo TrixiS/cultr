@@ -29,7 +29,7 @@ async def token(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 
-@router.post("/confirm/{confirm_jwt}", status_code=307)
+@router.get("/confirm/{confirm_jwt}", status_code=307)
 async def confirm(
     *,
     session: AsyncSession = Depends(get_session),
