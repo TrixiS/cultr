@@ -20,6 +20,7 @@ if settings.CORS_ORIGINS:
         allow_headers=["*"]
     )
 
+
 @app.on_event("startup")
 async def startup():
     await init_database()

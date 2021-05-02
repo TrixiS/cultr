@@ -5,7 +5,7 @@ from sqlalchemy import select, or_
 
 from .. import api_models
 from ..database import db_models, get_session
-from ..utils.security import PASSWORD_CONTEXT, create_jwt_from_data
+from ..utils.security import PASSWORD_CONTEXT, create_jwt_from_data, current_user
 from ..utils.email import send_email_confirmation
 
 router = APIRouter()
@@ -44,3 +44,8 @@ async def register(
     background_tasks.add_task(send_email_confirmation, user.email, confirm_url)
 
     return Response(status_code=201)
+
+
+@router.get("/@me", response_model=api_models.User)
+async def get_me(current_user: api_models.User = Depends(current_user)):
+    return api_models.User.from_orm(current_user)

@@ -9,6 +9,7 @@ class UserBase(BaseModel):
 class User(UserBase):
     id: int
     hashed_password: str
+    email_confirmed: bool
 
     class Config:
         orm_mode = True

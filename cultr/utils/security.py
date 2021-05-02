@@ -69,7 +69,11 @@ async def current_user(
     if db_user is None:
         raise error_401
 
-    if not db_user.email_confirmed:
+    return api_models.User.from_orm(db_user)
+
+
+async def current_active_user(current_user: api_models.User = Depends(current_user)):
+    if not current_user.email_confirmed:
         raise HTTPException(403, "Email is not confirmed")
 
-    return api_models.User.from_orm(db_user)
+    return current_user

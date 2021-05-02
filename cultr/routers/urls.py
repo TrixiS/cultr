@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import api_models
 from ..database import db_models, get_session
 from ..utils.db import fetch_user
-from ..utils.security import current_user
+from ..utils.security import current_active_user
 
 api_router = APIRouter()
 redirect_router = APIRouter()
@@ -62,7 +62,7 @@ async def is_valid_url(
 async def urls_post(
     *,
     session: AsyncSession = Depends(get_session),
-    user: api_models.User = Depends(current_user),
+    user: api_models.User = Depends(current_active_user),
     url: api_models.UrlIn = Depends(is_valid_url),
 ):
     owner = await fetch_user(user.username, session)
@@ -81,7 +81,7 @@ async def urls_post(
 async def urls_get_all(
     *,
     session: AsyncSession = Depends(get_session),
-    user: api_models.User = Depends(current_user),
+    user: api_models.User = Depends(current_active_user),
     page: Optional[int] = 1,
     items: Optional[int] = Depends(items_per_page)
 ):
@@ -107,7 +107,7 @@ async def urls_get_all(
 async def urls_get_single(
     *,
     session: AsyncSession = Depends(get_session),
-    user: api_models.User = Depends(current_user),
+    user: api_models.User = Depends(current_active_user),
     url_name: str
 ):
     url_select_query = (
@@ -128,7 +128,7 @@ async def urls_get_single(
 async def urls_delete(
     *,
     session: AsyncSession = Depends(get_session),
-    user: api_models.User = Depends(current_user),
+    user: api_models.User = Depends(current_active_user),
     url_name: str
 ):
     url_delete_query = (
@@ -149,7 +149,7 @@ async def urls_delete(
 async def urls_put(
     *,
     session: AsyncSession = Depends(get_session),
-    user: api_models.User = Depends(current_user),
+    user: api_models.User = Depends(current_active_user),
     url_name: str,
     url: api_models.UrlIn = Depends(is_valid_url)
 ):
@@ -179,14 +179,14 @@ async def url_redirect_get(
 
     url_select_query = (
         select(db_models.Url)
-        .where(db_models.Url.name == url_name)
-        .where(
+        .filter(db_models.Url.name == url_name)
+        .filter(
             or_(
                 db_models.Url.max_uses.is_(None),
                 db_models.Url.uses < db_models.Url.max_uses
             )
         )
-        .where(
+        .filter(
             or_(
                 db_models.Url.expiration_datetime.is_(None),
                 db_models.Url.expiration_datetime > now

@@ -36,21 +36,21 @@ async def confirm(
     request: Request,
     confirm_jwt: str
 ):
-    error_404 = HTTPException(404)
+    redirect_response = RedirectResponse(request.base_url)
     decoded_data = security.decode_jwt(confirm_jwt)
 
     if decoded_data is None:
-        raise error_404
+        return redirect_response
 
     select_query = select(db_models.User).filter_by(email=decoded_data["sub"])
     result = await session.execute(select_query)
     db_user = result.scalar()
 
     if db_user is None:
-        raise error_404
+        return redirect_response
 
     db_user.email_confirmed = True
     session.add(db_user)
     await session.commit()
 
-    return RedirectResponse(request.base_url)
+    return redirect_response
