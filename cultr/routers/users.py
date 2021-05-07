@@ -1,11 +1,13 @@
+from hmac import new
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, BackgroundTasks
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, update, or_
+from sqlalchemy.exc import IntegrityError
 
 from .. import api_models
 from ..database import db_models, get_session
-from ..utils.security import PASSWORD_CONTEXT, create_jwt_from_data, current_user
+from ..utils.security import PASSWORD_CONTEXT, create_jwt_from_data, current_active_user, current_user
 from ..utils.email import send_email_confirmation
 
 router = APIRouter()
@@ -49,3 +51,43 @@ async def register(
 @router.get("/@me", response_model=api_models.User)
 async def get_me(current_user: api_models.User = Depends(current_user)):
     return api_models.User.from_orm(current_user)
+
+
+# TODO: make login using usename and email
+#       push email into token sub
+@router.put("/@me", status_code=201)
+async def put_me(
+    *,
+    session: AsyncSession = Depends(get_session),
+    current_user: api_models.User = Depends(current_active_user),
+    new_user: api_models.UserUpdate
+):
+    response = Response(status_code=201)
+
+    if new_user.username == current_user.username and new_user.password is None:
+        return response
+
+    if new_user.new_password is not None and not PASSWORD_CONTEXT.verify(
+        new_user.password, current_user.hashed_password
+    ):
+        raise HTTPException(400, "Incorrect original password")
+
+    to_update = {"username": new_user.username}
+
+    if new_user.new_password is not None:
+        to_update["hashed_password"] = PASSWORD_CONTEXT.hash(
+            new_user.new_password)
+
+    try:
+        user_update_query = update(
+            db_models.User).filter_by(
+            id=current_user.id).values(
+            **to_update)
+
+        await session.execute(user_update_query)
+    except IntegrityError:
+        raise HTTPException(409)
+
+    await session.commit()
+
+    return response

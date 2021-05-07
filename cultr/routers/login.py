@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
 from starlette.responses import RedirectResponse
 
 from .. import api_models
@@ -29,6 +29,7 @@ async def token(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 
+# TODO: may be move get method to frontend and use just post
 @router.get("/confirm/{confirm_jwt}", status_code=307)
 async def confirm(
     *,
