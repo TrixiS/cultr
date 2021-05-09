@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 1
     CORS_ORIGINS: List[AnyHttpUrl] = ["http://localhost:3000"]
-    DATABASE_URI: str
+    DATABASE_URI: str = "sqlite+aiosqlite:///database.db"
 
     EMAILS_ON: bool = False
     EMAIL_USER: Optional[EmailStr]
