@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from ..database import async_session
-from ..database.models import User
+from ..database.db_models import User
 
 
 async def fetch_user(username, session=None):

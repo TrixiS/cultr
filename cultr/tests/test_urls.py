@@ -35,7 +35,7 @@ class TestUrls:
 
     def test_put(self):
         r = client.put(
-            "/api/v1/urls/" + self.url_name,
+            f"/api/v1/urls/{self.url_name}",
             json={
                 "name": self.url_alter_name,
                 "destination": self.url_alter_destination
@@ -45,10 +45,14 @@ class TestUrls:
 
         assert r.status_code in (204, 409)
 
+    def test_redirect(self):
+        r = client.get(f"/u/{self.url_alter_name}")
+        assert r.status_code in (307, 404)
+
     def test_delete(self):
         r = client.delete(
-            "/api/v1/urls/" +
-            self.url_alter_name, headers=self.auth_headers
+            f"/api/v1/urls/{self.url_alter_name}",
+            headers=self.auth_headers
         )
 
         assert r.status_code == 204

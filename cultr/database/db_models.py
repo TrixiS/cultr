@@ -4,7 +4,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
 
@@ -13,6 +12,8 @@ class User(Base):
 
     id = Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     username = Column(sqlalchemy.String, unique=True)
+    email = Column(sqlalchemy.String, unique=True)
+    email_confirmed = Column(sqlalchemy.Boolean, default=False)
     hashed_password = Column(sqlalchemy.String)
 
 
