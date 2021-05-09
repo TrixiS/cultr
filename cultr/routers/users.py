@@ -1,4 +1,3 @@
-from hmac import new
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, BackgroundTasks
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +5,7 @@ from sqlalchemy import select, update, or_
 from sqlalchemy.exc import IntegrityError
 
 from .. import api_models
+from ..config import settings
 from ..database import db_models, get_session
 from ..utils.security import PASSWORD_CONTEXT, create_jwt_from_data, current_active_user, current_user
 from ..utils.email import send_email_confirmation
@@ -35,15 +35,18 @@ async def register(
     user = db_models.User(
         username=user_in.username,
         email=user_in.email,
-        hashed_password=PASSWORD_CONTEXT.hash(user_in.password)
+        hashed_password=PASSWORD_CONTEXT.hash(user_in.password),
+        email_confirmed=not settings.EMAILS_ON
     )
 
     session.add(user)
     await session.commit()
 
-    confirm_jwt = create_jwt_from_data({"sub": user.email})
-    confirm_url = str(request.base_url) + f"api/confirm/{confirm_jwt}"
-    background_tasks.add_task(send_email_confirmation, user.email, confirm_url)
+    if settings.EMAILS_ON:
+        confirm_jwt = create_jwt_from_data({"sub": user.email})
+        confirm_url = str(request.base_url) + f"api/confirm/{confirm_jwt}"
+        background_tasks.add_task(
+            send_email_confirmation, user.email, confirm_url)
 
     return Response(status_code=201)
 
@@ -53,8 +56,7 @@ async def get_me(current_user: api_models.User = Depends(current_user)):
     return api_models.User.from_orm(current_user)
 
 
-# TODO: make login using usename and email
-#       push email into token sub
+# TODO: push email into token sub
 @router.put("/@me", status_code=201)
 async def put_me(
     *,
